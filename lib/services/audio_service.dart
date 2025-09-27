@@ -13,7 +13,7 @@ class AudioService {
   factory AudioService() => _instance;
   AudioService._internal();
 
-  final AudioRecorder _recorder = AudioRecorder();
+  final Record _recorder = Record();
   final AudioPlayer _player = AudioPlayer();
 
   bool _isRecording = false;
@@ -55,10 +55,7 @@ class AudioService {
         throw Exception('録音権限がありません');
       }
 
-      await _recorder.start(
-        const RecordConfig(),
-        path: _currentRecordingPath ?? '',
-      );
+      await _recorder.start();
 
       _isRecording = true;
       _recordedSounds.clear();
