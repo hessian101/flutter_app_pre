@@ -34,11 +34,11 @@ class HomeScreen extends StatelessWidget {
                   '星座から音楽を生成するリズムゲーム',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Color(AppColors.secondaryTextColor),
+                    color: Colors.lightBlue.withValues(alpha: 0.8),
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 100),
                 _buildMenuButton(
                   context,
                   'ゲーム開始',
@@ -67,34 +67,64 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FloatingActionButton(
-            onPressed: () => Navigator.pushNamed(context, Routes.howToPlay),
-            backgroundColor: Colors.white.withValues(alpha: 0.15),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
+          Container(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15),
-              side: BorderSide(
-                color: Colors.white.withValues(alpha: 0.3),
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.lightBlue.withValues(alpha: 0.05),
+                  Colors.lightBlue.withValues(alpha: 0.2),
+                  Colors.lightBlue.withValues(alpha: 0.05),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+              border: Border.all(
+                color: Colors.lightBlue.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
-            child: const Icon(Icons.help_outline, size: 24),
+            child: FloatingActionButton(
+              onPressed: () => Navigator.pushNamed(context, Routes.howToPlay),
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(Icons.help_outline, size: 24),
+            ),
           ),
           const SizedBox(width: 12),
-          FloatingActionButton(
-            onPressed: () => Navigator.pushNamed(context, Routes.settings),
-            backgroundColor: Colors.white.withValues(alpha: 0.15),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
+          Container(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15),
-              side: BorderSide(
-                color: Colors.white.withValues(alpha: 0.3),
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.lightBlue.withValues(alpha: 0.05),
+                  Colors.lightBlue.withValues(alpha: 0.2),
+                  Colors.lightBlue.withValues(alpha: 0.05),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+              border: Border.all(
+                color: Colors.lightBlue.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
-            child: const Icon(Icons.settings, size: 24),
+            child: FloatingActionButton(
+              onPressed: () => Navigator.pushNamed(context, Routes.settings),
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(Icons.settings, size: 24),
+            ),
           ),
         ],
       ),
@@ -112,17 +142,30 @@ class HomeScreen extends StatelessWidget {
       width: double.infinity,
       height: 60,
       margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Colors.lightBlue.withValues(alpha: 0.05),
+            Colors.lightBlue.withValues(alpha: 0.2),
+            Colors.lightBlue.withValues(alpha: 0.05),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        border: Border.all(
+          color: Colors.lightBlue.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white.withValues(alpha: 0.15),
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
-            side: BorderSide(
-              color: Colors.white.withValues(alpha: 0.3),
-              width: 1,
-            ),
           ),
           elevation: 0,
           shadowColor: Colors.transparent,

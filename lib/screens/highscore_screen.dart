@@ -24,7 +24,9 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
 
   void _loadHighScores() async {
     try {
-      final scores = await _databaseService.getAllHighScores(sortByScore: _sortByScore);
+      final scores = await _databaseService.getAllHighScores(
+        sortByScore: _sortByScore,
+      );
       setState(() {
         _highScores = scores;
         _isLoading = false;
@@ -70,9 +72,7 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
               Navigator.pop(context);
               _deleteScore(score);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('削除'),
           ),
         ],
@@ -85,7 +85,7 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
       if (score.id != null) {
         await _databaseService.deleteHighScore(score.id!);
         _loadHighScores();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -134,21 +134,20 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(AppColors.backgroundColor),
-              Color(AppColors.surfaceColor),
-            ],
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/image/home.png'),
+            fit: BoxFit.cover,
           ),
         ),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _highScores.isEmpty
-                ? _buildEmptyState()
-                : _buildScoreList(),
+        child: Container(
+          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.3)),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _highScores.isEmpty
+              ? _buildEmptyState()
+              : _buildScoreList(),
+        ),
       ),
     );
   }
@@ -231,7 +230,7 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
             itemBuilder: (context, index) {
               final score = _highScores[index];
               final rank = _sortByScore ? index + 1 : null;
-              
+
               return Card(
                 color: Color(AppColors.surfaceColor),
                 margin: const EdgeInsets.only(bottom: 8),
