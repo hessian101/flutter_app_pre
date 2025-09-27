@@ -14,28 +14,27 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with TickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late AnimationController _gameController;
   late Timer _gameTimer;
-  
+
   List<GameNote> _notes = [];
   List<StarData> _starData = [];
-  
+
   int _score = 0;
   int _combo = 0;
   int _maxCombo = 0;
   int _perfectCount = 0;
   int _goodCount = 0;
   int _missCount = 0;
-  
+
   bool _isGameActive = false;
   bool _isRecording = false;
   double _gameTime = 0.0;
-  
+
   AudioService? _audioService;
   ApiService? _apiService;
-  
+
   bool _isLoading = false;
   bool _gameSetupComplete = false;
 
@@ -48,7 +47,18 @@ class _GameScreenState extends State<GameScreen>
     );
     _audioService = AudioService();
     _apiService = ApiService();
-    _showImageSelectionDialog();
+    // _showImageSelectionDialog();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_gameSetupComplete) {
+      _gameSetupComplete = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showImageSelectionDialog();
+      });
+    }
   }
 
   void _showImageSelectionDialog() {
@@ -158,10 +168,7 @@ class _GameScreenState extends State<GameScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Color(AppColors.surfaceColor),
-        title: Text(
-          title,
-          style: TextStyle(color: Color(AppColors.textColor)),
-        ),
+        title: Text(title, style: TextStyle(color: Color(AppColors.textColor))),
         content: Text(
           message,
           style: TextStyle(color: Color(AppColors.secondaryTextColor)),
@@ -216,7 +223,7 @@ class _GameScreenState extends State<GameScreen>
   void _startGame() {
     _isGameActive = true;
     _startRecording();
-    
+
     _gameController.forward();
     _gameTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
       setState(() {
@@ -228,7 +235,7 @@ class _GameScreenState extends State<GameScreen>
 
   void _updateNotes() {
     for (var note in _notes) {
-      if (!note.isPressed && 
+      if (!note.isPressed &&
           _gameTime > note.starData.timing + GameConstants.goodTiming) {
         _handleMiss(note);
       }
@@ -282,13 +289,10 @@ class _GameScreenState extends State<GameScreen>
     setState(() {
       _score += points * (_combo > 10 ? 2 : 1);
       _maxCombo = max(_maxCombo, _combo);
-      
+
       final noteIndex = _notes.indexOf(note);
       if (noteIndex != -1) {
-        _notes[noteIndex] = note.copyWith(
-          isPressed: true,
-          judgment: judgment,
-        );
+        _notes[noteIndex] = note.copyWith(isPressed: true, judgment: judgment);
       }
     });
 
@@ -301,7 +305,7 @@ class _GameScreenState extends State<GameScreen>
     setState(() {
       _missCount++;
       _combo = 0;
-      
+
       final noteIndex = _notes.indexOf(note);
       if (noteIndex != -1) {
         _notes[noteIndex] = note.copyWith(
@@ -319,8 +323,8 @@ class _GameScreenState extends State<GameScreen>
     _stopRecording();
 
     final totalNotes = _perfectCount + _goodCount + _missCount;
-    final accuracy = totalNotes > 0 
-        ? ((_perfectCount + _goodCount) / totalNotes) * 100 
+    final accuracy = totalNotes > 0
+        ? ((_perfectCount + _goodCount) / totalNotes) * 100
         : 0.0;
 
     final result = GameResult(
@@ -332,11 +336,7 @@ class _GameScreenState extends State<GameScreen>
       missCount: _missCount,
     );
 
-    Navigator.pushReplacementNamed(
-      context,
-      Routes.result,
-      arguments: result,
-    );
+    Navigator.pushReplacementNamed(context, Routes.result, arguments: result);
   }
 
   @override
@@ -351,10 +351,7 @@ class _GameScreenState extends State<GameScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.indigo.shade900,
-                    Colors.black,
-                  ],
+                  colors: [Colors.indigo.shade900, Colors.black],
                 ),
               ),
             ),
@@ -404,10 +401,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget _buildStarField() {
-    return CustomPaint(
-      painter: StarFieldPainter(),
-      size: Size.infinite,
-    );
+    return CustomPaint(painter: StarFieldPainter(), size: Size.infinite);
   }
 
   Widget _buildGameNotes() {
@@ -430,10 +424,7 @@ class _GameScreenState extends State<GameScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _getNoteColor(note),
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 2),
                   boxShadow: [
                     BoxShadow(
                       color: _getNoteColor(note).withValues(alpha: 0.5),
@@ -459,11 +450,11 @@ class _GameScreenState extends State<GameScreen>
 
   double _calculateNoteOpacity(GameNote note) {
     if (note.isPressed) return 0.3;
-    
+
     final timeUntilNote = note.starData.timing - _gameTime;
     if (timeUntilNote > GameConstants.noteAppearTime) return 0.0;
     if (timeUntilNote < -GameConstants.goodTiming) return 0.0;
-    
+
     return 1.0;
   }
 
@@ -571,7 +562,7 @@ class StarFieldPainter extends CustomPainter {
       final x = random.nextDouble() * size.width;
       final y = random.nextDouble() * size.height;
       final radius = random.nextDouble() * 2 + 0.5;
-      
+
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
   }

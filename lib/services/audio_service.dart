@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../utils/audio_utils.dart';
 import 'download_service.dart';
@@ -14,33 +13,37 @@ class AudioService {
   factory AudioService() => _instance;
   AudioService._internal();
 
-  final Record _recorder = Record();
+  final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _player = AudioPlayer();
-  
+
   bool _isRecording = false;
   bool _isPlaying = false;
   String? _currentRecordingPath;
   final List<TapSound> _recordedSounds = [];
   DateTime? _recordingStartTime;
-  
+
   VoidCallback? _playbackCompleteCallback;
 
   Future<void> initialize() async {
     final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration(
-      avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.defaultToSpeaker,
-      avAudioSessionMode: AVAudioSessionMode.defaultMode,
-      avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy.defaultPolicy,
-      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-      androidAudioAttributes: AndroidAudioAttributes(
-        contentType: AndroidAudioContentType.music,
-        flags: AndroidAudioFlags.none,
-        usage: AndroidAudioUsage.game,
+    await session.configure(
+      const AudioSessionConfiguration(
+        avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+        avAudioSessionCategoryOptions:
+            AVAudioSessionCategoryOptions.defaultToSpeaker,
+        avAudioSessionMode: AVAudioSessionMode.defaultMode,
+        avAudioSessionRouteSharingPolicy:
+            AVAudioSessionRouteSharingPolicy.defaultPolicy,
+        avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+        androidAudioAttributes: AndroidAudioAttributes(
+          contentType: AndroidAudioContentType.music,
+          flags: AndroidAudioFlags.none,
+          usage: AndroidAudioUsage.game,
+        ),
+        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+        androidWillPauseWhenDucked: false,
       ),
-      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-      androidWillPauseWhenDucked: false,
-    ));
+    );
   }
 
   Future<void> startRecording() async {
@@ -52,12 +55,15 @@ class AudioService {
         throw Exception('録音権限がありません');
       }
 
-      await _recorder.start();
+      await _recorder.start(
+        const RecordConfig(),
+        path: _currentRecordingPath ?? '',
+      );
 
       _isRecording = true;
       _recordedSounds.clear();
       _recordingStartTime = DateTime.now();
-      
+
       print('録音開始');
     } catch (e) {
       print('録音開始エラー: $e');
@@ -87,7 +93,7 @@ class AudioService {
       timing: timing,
       timestamp: DateTime.now(),
     );
-    
+
     _recordedSounds.add(tapSound);
     print('タップ音記録: $soundId at $timing');
   }
@@ -95,24 +101,29 @@ class AudioService {
   Future<void> playTapSound(String soundId) async {
     try {
       recordTapSound(soundId, DateTime.now().millisecondsSinceEpoch / 1000.0);
-      
+
       // 1. まずダウンロード済み音源を確認
       final downloadService = DownloadService();
       final fileName = '$soundId.wav';
-      
-      if (await downloadService.isFileDownloaded(fileName, subfolder: 'sounds')) {
+
+      if (await downloadService.isFileDownloaded(
+        fileName,
+        subfolder: 'sounds',
+      )) {
         // ダウンロード済み音源を再生
-        final localPath = await downloadService.getLocalFilePath(fileName, subfolder: 'sounds');
+        final localPath = await downloadService.getLocalFilePath(
+          fileName,
+          subfolder: 'sounds',
+        );
         await _playLocalSound(localPath);
         print('ダウンロード音源再生: $soundId');
         return;
       }
-      
+
       // 2. アセット音源を再生
       final soundPath = 'assets/sounds/$fileName';
       await _playAssetSound(soundPath);
       print('アセット音源再生: $soundId');
-      
     } catch (e) {
       print('タップ音再生エラー: $e');
       // フォールバック: 周波数情報を表示
@@ -127,7 +138,7 @@ class AudioService {
       final player = AudioPlayer();
       await player.setAsset(assetPath);
       await player.play();
-      
+
       // 再生完了後にリソースを解放
       player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
@@ -146,7 +157,7 @@ class AudioService {
       final player = AudioPlayer();
       await player.setFilePath(filePath);
       await player.play();
-      
+
       // 再生完了後にリソースを解放
       player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
@@ -169,7 +180,7 @@ class AudioService {
       'note_6': 493.88, // B4
       'note_7': 523.25, // C5
     };
-    
+
     return frequencies[soundId] ?? 440.0;
   }
 
@@ -188,14 +199,14 @@ class AudioService {
       final audioDir = await AudioUtils.getAudioRecordingsDirectory();
       final fileName = AudioUtils.generateFileName(prefix: 'game');
       final finalPath = path.join(audioDir, fileName);
-      
+
       await file.copy(finalPath);
       await _synthesizeAudioWithTaps();
-      
+
       final savedPath = finalPath;
       _currentRecordingPath = null;
       _recordedSounds.clear();
-      
+
       print('録音保存完了: $savedPath');
       return savedPath;
     } catch (e) {
@@ -207,7 +218,7 @@ class AudioService {
   Future<void> _synthesizeAudioWithTaps() async {
     print('音声合成処理（実装予定）');
     print('記録されたタップ音: ${_recordedSounds.length}個');
-    
+
     for (final sound in _recordedSounds) {
       print('- ${sound.soundId} at ${sound.timing}');
     }
@@ -237,7 +248,7 @@ class AudioService {
 
       await _player.setFilePath(filePath);
       _isPlaying = true;
-      
+
       _player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
           _isPlaying = false;

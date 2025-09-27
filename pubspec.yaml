@@ -40,9 +40,9 @@ dependencies:
   path: ^1.8.3
   
   # Audio recording and playback
-  audio_session: ^0.1.16
-  just_audio: ^0.9.36
-  record: ^4.4.4
+  audio_session: ^0.2.2
+  just_audio: ^0.10.5
+  record: ^6.1.1
   
   # HTTP requests
   http: ^1.1.0
