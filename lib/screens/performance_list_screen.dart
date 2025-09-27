@@ -16,7 +16,7 @@ class PerformanceListScreen extends StatefulWidget {
 class _PerformanceListScreenState extends State<PerformanceListScreen> {
   final DatabaseService _databaseService = DatabaseService();
   final AudioService _audioService = AudioService();
-  
+
   List<SavedSong> _savedSongs = [];
   bool _isLoading = true;
   String? _currentlyPlayingId;
@@ -85,7 +85,6 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
           });
         }
       });
-
     } catch (e) {
       debugPrint('再生エラー: $e');
       if (mounted) {
@@ -125,9 +124,7 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
               Navigator.pop(context);
               _deleteSong(song);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('削除'),
           ),
         ],
@@ -141,7 +138,7 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
         await _databaseService.deleteSavedSong(song.id!);
         await AudioUtils.deleteAudioFile(song.filePath);
         _loadSavedSongs();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -201,21 +198,20 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(AppColors.backgroundColor),
-              Color(AppColors.surfaceColor),
-            ],
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/image/home.png'),
+            fit: BoxFit.cover,
           ),
         ),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _savedSongs.isEmpty
-                ? _buildEmptyState()
-                : _buildSongList(),
+        child: Container(
+          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.3)),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _savedSongs.isEmpty
+              ? _buildEmptyState()
+              : _buildSongList(),
+        ),
       ),
     );
   }
@@ -298,8 +294,9 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
             itemCount: _savedSongs.length,
             itemBuilder: (context, index) {
               final song = _savedSongs[index];
-              final isCurrentlyPlaying = _currentlyPlayingId == song.id.toString() && _isPlaying;
-              
+              final isCurrentlyPlaying =
+                  _currentlyPlayingId == song.id.toString() && _isPlaying;
+
               return Card(
                 color: Color(AppColors.surfaceColor),
                 margin: const EdgeInsets.only(bottom: 8),
@@ -307,8 +304,12 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
                   leading: IconButton(
                     onPressed: () => _playRecording(song),
                     icon: Icon(
-                      isCurrentlyPlaying ? Icons.pause_circle : Icons.play_circle,
-                      color: isCurrentlyPlaying ? Color(AppColors.accentColor) : Color(AppColors.primaryColor),
+                      isCurrentlyPlaying
+                          ? Icons.pause_circle
+                          : Icons.play_circle,
+                      color: isCurrentlyPlaying
+                          ? Color(AppColors.accentColor)
+                          : Color(AppColors.primaryColor),
                       size: 40,
                     ),
                   ),
@@ -366,7 +367,9 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: Color(AppColors.primaryColor).withValues(alpha: 0.2),
+                              color: Color(
+                                AppColors.primaryColor,
+                              ).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
