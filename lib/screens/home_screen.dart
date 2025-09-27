@@ -9,10 +9,14 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(AppColors.backgroundColor),
       body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/image/home.png'),
-            fit: BoxFit.cover,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(AppColors.backgroundColor),
+              Color(AppColors.surfaceColor),
+            ],
           ),
         ),
         child: SafeArea(
@@ -29,7 +33,7 @@ class HomeScreen extends StatelessWidget {
                     color: Color(AppColors.textColor),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 Text(
                   '星座から音楽を生成するリズムゲーム',
                   style: TextStyle(
@@ -38,67 +42,46 @@ class HomeScreen extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 60),
                 _buildMenuButton(
                   context,
                   'ゲーム開始',
                   Icons.play_arrow,
                   () => Navigator.pushNamed(context, Routes.game),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 _buildMenuButton(
                   context,
                   'ハイスコア',
                   Icons.leaderboard,
                   () => Navigator.pushNamed(context, Routes.highScore),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 _buildMenuButton(
                   context,
                   '演奏記録',
                   Icons.music_note,
                   () => Navigator.pushNamed(context, Routes.performanceList),
                 ),
+                const SizedBox(height: 20),
+                _buildMenuButton(
+                  context,
+                  '遊び方',
+                  Icons.help_outline,
+                  () => Navigator.pushNamed(context, Routes.howToPlay),
+                ),
+                const SizedBox(height: 20),
+                _buildMenuButton(
+                  context,
+                  '設定',
+                  Icons.settings,
+                  () => Navigator.pushNamed(context, Routes.settings),
+                ),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () => Navigator.pushNamed(context, Routes.howToPlay),
-            backgroundColor: Colors.white.withValues(alpha: 0.15),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-              side: BorderSide(
-                color: Colors.white.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: const Icon(Icons.help_outline, size: 24),
-          ),
-          const SizedBox(width: 12),
-          FloatingActionButton(
-            onPressed: () => Navigator.pushNamed(context, Routes.settings),
-            backgroundColor: Colors.white.withValues(alpha: 0.15),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-              side: BorderSide(
-                color: Colors.white.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: const Icon(Icons.settings, size: 24),
-          ),
-        ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -108,36 +91,29 @@ class HomeScreen extends StatelessWidget {
     IconData icon,
     VoidCallback onPressed,
   ) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 60,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white.withValues(alpha: 0.15),
-          foregroundColor: Colors.white,
+          backgroundColor: Color(AppColors.primaryColor),
+          foregroundColor: Color(AppColors.textColor),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-            side: BorderSide(
-              color: Colors.white.withValues(alpha: 0.3),
-              width: 1,
-            ),
+            borderRadius: BorderRadius.circular(12),
           ),
-          elevation: 0,
-          shadowColor: Colors.transparent,
+          elevation: 4,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 24, color: Colors.white),
+            Icon(icon, size: 24),
             const SizedBox(width: 12),
             Text(
               text,
               style: const TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

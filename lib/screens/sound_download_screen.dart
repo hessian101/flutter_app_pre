@@ -50,7 +50,7 @@ class _SoundDownloadScreenState extends State<SoundDownloadScreen> {
       
       final successCount = results.values.where((path) => path != null).length;
       
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$successCount個のファイルをダウンロードしました'),
@@ -61,7 +61,7 @@ class _SoundDownloadScreenState extends State<SoundDownloadScreen> {
       
       await _loadDownloadedFiles();
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('ダウンロードエラー: $e'),
@@ -105,7 +105,7 @@ class _SoundDownloadScreenState extends State<SoundDownloadScreen> {
         await _loadDownloadedFiles();
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('ダウンロードエラー: $e'),
@@ -304,7 +304,7 @@ class _SoundDownloadScreenState extends State<SoundDownloadScreen> {
                                   );
                                   if (success) {
                                     await _loadDownloadedFiles();
-                                    if (mounted) {
+                                    if (mounted && context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(content: Text('$fileNameを削除しました')),
                                       );

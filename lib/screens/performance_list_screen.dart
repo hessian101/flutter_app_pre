@@ -36,7 +36,7 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('演奏記録読み込みエラー: $e');
+      debugPrint('演奏記録読み込みエラー: $e');
       setState(() {
         _isLoading = false;
       });
@@ -87,7 +87,7 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
       });
 
     } catch (e) {
-      print('再生エラー: $e');
+      debugPrint('再生エラー: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -152,7 +152,7 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
         }
       }
     } catch (e) {
-      print('削除エラー: $e');
+      debugPrint('削除エラー: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
@@ -32,7 +33,7 @@ class AudioUtils {
       }
       return false;
     } catch (e) {
-      print('Error deleting audio file: $e');
+      debugPrint('Error deleting audio file: $e');
       return false;
     }
   }
@@ -48,7 +49,7 @@ class AudioUtils {
           .map((file) => file.path)
           .toList();
     } catch (e) {
-      print('Error getting audio files: $e');
+      debugPrint('Error getting audio files: $e');
       return [];
     }
   }
@@ -73,7 +74,7 @@ class AudioUtils {
       }
       return 0;
     } catch (e) {
-      print('Error getting file size: $e');
+      debugPrint('Error getting file size: $e');
       return 0;
     }
   }

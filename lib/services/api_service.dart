@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../models/star_data.dart';
@@ -21,7 +21,7 @@ class ApiService {
       );
       return image;
     } catch (e) {
-      print('画像選択エラー: $e');
+      debugPrint('画像選択エラー: $e');
       return null;
     }
   }
@@ -36,90 +36,125 @@ class ApiService {
       );
       return image;
     } catch (e) {
-      print('カメラ撮影エラー: $e');
+      debugPrint('カメラ撮影エラー: $e');
       return null;
     }
   }
 
   Future<List<StarData>> processStarImage(XFile imageFile) async {
     try {
-      print('星座画像解析開始: ${imageFile.path}');
+      debugPrint('星座画像解析開始: ${imageFile.path}');
       
-      await Future.delayed(const Duration(seconds: 2));
+      // 実際のAPI呼び出しを試行
+      try {
+        final apiResponse = await _callStarAnalysisApi(imageFile);
+        if (apiResponse != null) {
+          debugPrint('API解析完了: ${apiResponse.length}個の星を検出');
+          return apiResponse;
+        }
+      } catch (apiError) {
+        debugPrint('API呼び出し失敗、フォールバックデータを使用: $apiError');
+      }
       
-      final demoStarData = _generateDemoStarData();
-      print('解析完了: ${demoStarData.length}個の星を検出');
+      // APIが失敗した場合のフォールバック
+      await Future.delayed(const Duration(seconds: 1));
+      final fallbackData = _getFallbackStarData();
+      debugPrint('フォールバック解析完了: ${fallbackData.length}個の星を検出');
       
-      return demoStarData;
+      return fallbackData;
     } catch (e) {
-      print('画像解析エラー: $e');
+      debugPrint('画像解析エラー: $e');
       throw ApiException('画像の解析に失敗しました: $e');
     }
   }
 
 
 
-  List<StarData> _generateDemoStarData() {
-    final random = Random();
-    final List<StarData> stars = [];
-
-    final patterns = [
-      [
-        {'x': 100.0, 'y': 150.0},
-        {'x': 180.0, 'y': 120.0},
-        {'x': 250.0, 'y': 160.0},
-        {'x': 200.0, 'y': 220.0},
-      ],
-      [
-        {'x': 80.0, 'y': 300.0},
-        {'x': 150.0, 'y': 280.0},
-        {'x': 220.0, 'y': 300.0},
-        {'x': 150.0, 'y': 350.0},
-      ],
-      [
-        {'x': 300.0, 'y': 200.0},
-        {'x': 320.0, 'y': 250.0},
-        {'x': 280.0, 'y': 280.0},
-        {'x': 340.0, 'y': 300.0},
-      ],
-    ];
-
-    double currentTiming = 1.0;
-    
-    for (int patternIndex = 0; patternIndex < patterns.length; patternIndex++) {
-      final pattern = patterns[patternIndex];
+  /// 実際のAPI呼び出し（現在はモック）
+  Future<List<StarData>?> _callStarAnalysisApi(XFile imageFile) async {
+    try {
+      // 画像をbase64エンコード
+      final bytes = await imageFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
       
-      for (int starIndex = 0; starIndex < pattern.length; starIndex++) {
-        final pos = pattern[starIndex];
-        final soundId = 'note_${random.nextInt(8)}';
-        
-        stars.add(StarData(
-          x: pos['x']! + random.nextDouble() * 40 - 20,
-          y: pos['y']! + random.nextDouble() * 40 - 20,
-          soundId: soundId,
-          timing: currentTiming,
-        ));
-        
-        currentTiming += 0.5 + random.nextDouble() * 0.5;
+      final response = await http.post(
+        Uri.parse('$_baseUrl/analyze-stars'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKey',
+        },
+        body: jsonEncode({
+          'image': base64Image,
+          'options': {
+            'max_stars': 20,
+            'sensitivity': 0.8,
+            'generate_music': true,
+          }
+        }),
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          return _parseApiResponse(data);
+        }
       }
       
-      currentTiming += 1.0;
+      return null;
+    } catch (e) {
+      debugPrint('API呼び出しエラー: $e');
+      return null;
     }
+  }
 
-    final extraStars = List.generate(8, (index) {
-      return StarData(
-        x: random.nextDouble() * 300 + 50,
-        y: random.nextDouble() * 400 + 100,
-        soundId: 'note_${random.nextInt(8)}',
-        timing: currentTiming + index * 0.8,
-      );
-    });
-    
-    stars.addAll(extraStars);
+  /// APIレスポンスをStarDataに変換
+  List<StarData> _parseApiResponse(Map<String, dynamic> response) {
+    final List<dynamic> starsData = response['stars'] ?? [];
+    return starsData.map((star) => StarData(
+      x: (star['x'] as num).toDouble(),
+      y: (star['y'] as num).toDouble(),
+      soundId: star['soundId'] as String? ?? 'note_0',
+      timing: (star['timing'] as num).toDouble(),
+    )).toList();
+  }
 
-    stars.sort((a, b) => a.timing.compareTo(b.timing));
-    
-    return stars;
+  /// APIが利用できない場合のフォールバックデータ
+  /// 実際のAPIレスポンス形式に準拠した構造
+  List<StarData> _getFallbackStarData() {
+    // 実際のAPIから期待されるレスポンス形式のフォールバックデータ
+    // constellation: "orion" のような識別子も含めることができる
+    return [
+      // 4レーン対応のデモデータ（レーン0-3にマッピング）
+      StarData(x: 0, y: 0, soundId: 'button1', timing: 2.0),   // レーン0
+      StarData(x: 1, y: 0, soundId: 'button2', timing: 2.5),   // レーン1
+      StarData(x: 2, y: 0, soundId: 'button3', timing: 3.0),   // レーン2
+      StarData(x: 3, y: 0, soundId: 'button4', timing: 3.5),   // レーン3
+      
+      StarData(x: 0, y: 0, soundId: 'button1', timing: 4.0),   
+      StarData(x: 2, y: 0, soundId: 'button3', timing: 4.2),   
+      StarData(x: 1, y: 0, soundId: 'button2', timing: 4.5),   
+      StarData(x: 3, y: 0, soundId: 'button4', timing: 4.7),   
+      
+      StarData(x: 0, y: 0, soundId: 'button1', timing: 5.0),   
+      StarData(x: 1, y: 0, soundId: 'button2', timing: 5.0),   
+      StarData(x: 2, y: 0, soundId: 'button3', timing: 5.2),   
+      StarData(x: 3, y: 0, soundId: 'button4', timing: 5.4),   
+      
+      StarData(x: 2, y: 0, soundId: 'button3', timing: 6.0),   
+      StarData(x: 0, y: 0, soundId: 'button1', timing: 6.3),   
+      StarData(x: 3, y: 0, soundId: 'button4', timing: 6.5),   
+      StarData(x: 1, y: 0, soundId: 'button2', timing: 6.8),   
+      
+      StarData(x: 1, y: 0, soundId: 'button2', timing: 7.5),   
+      StarData(x: 2, y: 0, soundId: 'button3', timing: 8.0),   
+      StarData(x: 0, y: 0, soundId: 'button1', timing: 8.3),   
+      StarData(x: 3, y: 0, soundId: 'button4', timing: 8.5),   
+      
+      StarData(x: 0, y: 0, soundId: 'button1', timing: 9.0),   
+      StarData(x: 1, y: 0, soundId: 'button2', timing: 9.2),   
+      StarData(x: 2, y: 0, soundId: 'button3', timing: 9.4),   
+      StarData(x: 3, y: 0, soundId: 'button4', timing: 9.6),
+    ]..sort((a, b) => a.timing.compareTo(b.timing));
   }
 
   Future<bool> validateImage(XFile imageFile) async {
@@ -146,7 +181,7 @@ class ApiService {
 
       return true;
     } catch (e) {
-      print('画像検証エラー: $e');
+      debugPrint('画像検証エラー: $e');
       if (e is ApiException) rethrow;
       throw ApiException('画像の検証に失敗しました');
     }
@@ -167,7 +202,7 @@ class ApiService {
         return {'status': 'error', 'message': 'API unavailable'};
       }
     } catch (e) {
-      print('API状態確認エラー: $e');
+      debugPrint('API状態確認エラー: $e');
       return {
         'status': 'offline',
         'message': 'デモモードで動作中',

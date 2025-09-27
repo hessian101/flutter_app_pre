@@ -30,7 +30,7 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('ハイスコア読み込みエラー: $e');
+      debugPrint('ハイスコア読み込みエラー: $e');
       setState(() {
         _isLoading = false;
       });
@@ -96,7 +96,7 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
         }
       }
     } catch (e) {
-      print('スコア削除エラー: $e');
+      debugPrint('スコア削除エラー: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
