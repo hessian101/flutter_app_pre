@@ -7,7 +7,7 @@ class GameConstants {
   static const int missScore = 0;
   
   static const double gameSpeed = 1.0;
-  static const double noteAppearTime = 2.0;
+  static const double noteAppearTime = 3.0;
   
   static const String audioRecordingsDir = 'audio_recordings';
   static const String audioFormat = 'wav';

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -18,7 +19,7 @@ class DownloadService {
       // Google Drive共有リンクを直接ダウンロード用に変換
       final directUrl = _convertToDirectDownloadUrl(driveUrl);
       
-      print('ダウンロード開始: $fileName');
+      debugPrint('ダウンロード開始: $fileName');
       
       // HTTPリクエストでファイルを取得
       final response = await http.get(Uri.parse(directUrl));
@@ -31,13 +32,13 @@ class DownloadService {
           subfolder,
         );
         
-        print('ダウンロード完了: $filePath');
+        debugPrint('ダウンロード完了: $filePath');
         return filePath;
       } else {
         throw Exception('ダウンロード失敗: HTTP ${response.statusCode}');
       }
     } catch (e) {
-      print('ダウンロードエラー: $e');
+      debugPrint('ダウンロードエラー: $e');
       return null;
     }
   }
@@ -137,7 +138,7 @@ class DownloadService {
       }
       return false;
     } catch (e) {
-      print('ファイル削除エラー: $e');
+      debugPrint('ファイル削除エラー: $e');
       return false;
     }
   }
@@ -154,11 +155,11 @@ class DownloadService {
       
       final files = await subDir.list().toList();
       return files
-          .where((entity) => entity is File)
+          .whereType<File>()
           .map((file) => path.basename(file.path))
           .toList();
     } catch (e) {
-      print('ファイル一覧取得エラー: $e');
+      debugPrint('ファイル一覧取得エラー: $e');
       return [];
     }
   }

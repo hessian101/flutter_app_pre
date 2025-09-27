@@ -73,7 +73,7 @@ class _SoundDownloadScreenState extends State<SoundDownloadScreen> {
 
       await _loadDownloadedFiles();
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('ダウンロードエラー: $e'), backgroundColor: Colors.red),
         );
@@ -114,7 +114,7 @@ class _SoundDownloadScreenState extends State<SoundDownloadScreen> {
         await _loadDownloadedFiles();
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('ダウンロードエラー: $e'), backgroundColor: Colors.red),
         );

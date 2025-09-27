@@ -89,7 +89,7 @@ class _ResultScreenState extends State<ResultScreen>
 
       await _databaseService.insertHighScore(highScore);
     } catch (e) {
-      print('ハイスコア保存エラー: $e');
+      debugPrint('ハイスコア保存エラー: $e');
     }
   }
 
@@ -107,7 +107,7 @@ class _ResultScreenState extends State<ResultScreen>
         setState(() {});
       }
     } catch (e) {
-      print('ハイスコアチェックエラー: $e');
+      debugPrint('ハイスコアチェックエラー: $e');
     }
   }
 
@@ -180,7 +180,7 @@ class _ResultScreenState extends State<ResultScreen>
         }
       }
     } catch (e) {
-      print('録音保存エラー: $e');
+      debugPrint('録音保存エラー: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -196,7 +196,7 @@ class _ResultScreenState extends State<ResultScreen>
     try {
       await _audioService.discardRecording();
     } catch (e) {
-      print('録音破棄エラー: $e');
+      debugPrint('録音破棄エラー: $e');
     }
   }
 

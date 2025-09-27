@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
-      "Bash(flutter:*)"
+      "Bash(flutter:*)",
+      "Bash(echo $PATH)",
+      "Bash(/mnt/c/Users/hirom/fvm/versions/3.35.4/bin/flutter doctor -v)",
+      "Bash(mv:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(/usr/bin/bash -c \"flutter pub get\")",
+      "Bash(/mnt/c/Users/hirom/fvm/versions/3.35.4/bin/flutter pub get)",
+      "Bash(dart pub:*)"
     ],
     "deny": []
   }

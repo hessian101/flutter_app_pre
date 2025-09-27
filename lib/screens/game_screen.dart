@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import '../models/star_data.dart';
 import '../utils/constants.dart';
+import '../utils/asset_manager.dart';
 import '../services/audio_service.dart';
 import '../services/api_service.dart';
+import '../widgets/game_lane_widget.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -14,29 +17,35 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen>
+    with TickerProviderStateMixin {
   late AnimationController _gameController;
   late Timer _gameTimer;
-
+  
   List<GameNote> _notes = [];
   List<StarData> _starData = [];
-
+  
   int _score = 0;
   int _combo = 0;
   int _maxCombo = 0;
   int _perfectCount = 0;
   int _goodCount = 0;
   int _missCount = 0;
-
+  
   bool _isGameActive = false;
   bool _isRecording = false;
   double _gameTime = 0.0;
-
+  
   AudioService? _audioService;
   ApiService? _apiService;
-
+  
   bool _isLoading = false;
   bool _gameSetupComplete = false;
+  
+  // エフェクト管理
+  final List<Widget> _tapEffects = [];
+  static const int laneCount = 4;
+  static const double judgmentLinePosition = 0.8;
 
   @override
   void initState() {
@@ -47,7 +56,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
     _audioService = AudioService();
     _apiService = ApiService();
-    // _showImageSelectionDialog();
   }
 
   @override
@@ -148,10 +156,43 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _useDemoData() {
+  void _useDemoData() async {
     Navigator.of(context).pop();
-    _generateDemoStarData();
-    _initializeGameWithStarData(_starData);
+    
+    setState(() {
+      _isLoading = true;
+    });
+    
+    // APIサービスからデモデータを取得
+    try {
+      final demoData = await _apiService!.processStarImage(
+        await _createDummyImageFile(),
+      );
+      
+      setState(() {
+        _isLoading = false;
+      });
+      
+      _initializeGameWithStarData(demoData);
+      
+      // BGMを開始
+      await _audioService!.playBackgroundMusic('bgm1');
+      
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showErrorDialog('エラー', 'デモデータの読み込みに失敗しました');
+    }
+  }
+  
+  // ダミーの画像ファイルを作成
+  Future<XFile> _createDummyImageFile() async {
+    return XFile.fromData(
+      Uint8List(0),
+      name: 'demo.jpg',
+      mimeType: 'image/jpeg',
+    );
   }
 
   void _initializeGameWithStarData(List<StarData> starData) {
@@ -168,7 +209,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Color(AppColors.surfaceColor),
-        title: Text(title, style: TextStyle(color: Color(AppColors.textColor))),
+        title: Text(
+          title,
+          style: TextStyle(color: Color(AppColors.textColor)),
+        ),
         content: Text(
           message,
           style: TextStyle(color: Color(AppColors.secondaryTextColor)),
@@ -199,17 +243,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _generateDemoStarData() {
-    final random = Random();
-    _starData = List.generate(20, (index) {
-      return StarData(
-        x: random.nextDouble() * 300 + 50,
-        y: random.nextDouble() * 400 + 100,
-        soundId: 'note_${random.nextInt(8)}',
-        timing: index * 2.0 + random.nextDouble() * 0.5,
-      );
-    });
-  }
+  // このメソッドは使用しない（APIサービスで処理）
 
   void _setupGameNotes() {
     _notes = _starData.map((star) {
@@ -218,24 +252,49 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         appearTime: star.timing - GameConstants.noteAppearTime,
       );
     }).toList();
+    
+    debugPrint('ゲームノーツ設定完了: ${_notes.length}個のノーツ');
+    for (var note in _notes.take(5)) { // 最初の5個だけログ出力
+      debugPrint('ノーツ: soundId=${note.starData.soundId}, timing=${note.starData.timing}, x=${note.starData.x}, y=${note.starData.y}');
+    }
   }
 
   void _startGame() {
-    _isGameActive = true;
-    _startRecording();
-
-    _gameController.forward();
-    _gameTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      setState(() {
-        _gameTime = _gameController.value * 300;
-        _updateNotes();
-      });
+    setState(() {
+      _isGameActive = true;
+      _gameTime = 0.0;
     });
+    
+    // アセット情報をデバッグ出力
+    AssetManager.validateAssets();
+    
+    _startRecording();
+    
+    // 5分間のゲーム
+    _gameController.reset();
+    _gameController.forward();
+    
+    // 60FPSで更新
+    _gameTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (mounted && _isGameActive) {
+        setState(() {
+          _gameTime = _gameController.value * 60.0; // 1分間に短縮
+          _updateNotes();
+        });
+        
+        // ゲーム終了チェック
+        if (_gameTime >= 60.0 || _gameController.isCompleted) {
+          _endGame();
+        }
+      }
+    });
+    
+    debugPrint('ゲーム開始: ${_notes.length}個のノーツ, 最初のノーツタイミング: ${_notes.isNotEmpty ? _notes.first.starData.timing : "N/A"}');
   }
 
   void _updateNotes() {
     for (var note in _notes) {
-      if (!note.isPressed &&
+      if (!note.isPressed && 
           _gameTime > note.starData.timing + GameConstants.goodTiming) {
         _handleMiss(note);
       }
@@ -247,7 +306,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       await _audioService?.startRecording();
       _isRecording = true;
     } catch (e) {
-      print('録音開始エラー: $e');
+      debugPrint('録音開始エラー: $e');
     }
   }
 
@@ -258,7 +317,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         _isRecording = false;
       }
     } catch (e) {
-      print('録音停止エラー: $e');
+      debugPrint('録音停止エラー: $e');
     }
   }
 
@@ -268,6 +327,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final timingDifference = (_gameTime - note.starData.timing).abs();
     NoteJudgment judgment;
     int points;
+    
+    // レーン位置を計算（エフェクト用）
+    final laneIndex = note.starData.x.toInt().clamp(0, laneCount - 1);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final laneWidth = screenWidth / laneCount;
+    final effectX = laneIndex * laneWidth + laneWidth / 2 - 40;
 
     if (timingDifference <= GameConstants.perfectTiming) {
       judgment = NoteJudgment.perfect;
@@ -289,10 +354,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     setState(() {
       _score += points * (_combo > 10 ? 2 : 1);
       _maxCombo = max(_maxCombo, _combo);
-
+      
       final noteIndex = _notes.indexOf(note);
       if (noteIndex != -1) {
-        _notes[noteIndex] = note.copyWith(isPressed: true, judgment: judgment);
+        _notes[noteIndex] = note.copyWith(
+          isPressed: true,
+          judgment: judgment,
+        );
+      }
+      
+      // 成功時のタップエフェクトを追加
+      if (judgment != NoteJudgment.miss) {
+        _addTapEffect(effectX, MediaQuery.of(context).size.height * judgmentLinePosition - 40, _getNoteColor(note));
       }
     });
 
@@ -305,7 +378,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     setState(() {
       _missCount++;
       _combo = 0;
-
+      
       final noteIndex = _notes.indexOf(note);
       if (noteIndex != -1) {
         _notes[noteIndex] = note.copyWith(
@@ -317,14 +390,19 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _endGame() {
-    _isGameActive = false;
+    if (!_isGameActive) return; // 重複実行防止
+    
+    setState(() {
+      _isGameActive = false;
+    });
+    
     _gameController.stop();
     _gameTimer.cancel();
     _stopRecording();
 
     final totalNotes = _perfectCount + _goodCount + _missCount;
-    final accuracy = totalNotes > 0
-        ? ((_perfectCount + _goodCount) / totalNotes) * 100
+    final accuracy = totalNotes > 0 
+        ? ((_perfectCount + _goodCount) / totalNotes) * 100 
         : 0.0;
 
     final result = GameResult(
@@ -336,7 +414,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       missCount: _missCount,
     );
 
-    Navigator.pushReplacementNamed(context, Routes.result, arguments: result);
+    Navigator.pushReplacementNamed(
+      context,
+      Routes.result,
+      arguments: result,
+    );
   }
 
   @override
@@ -351,13 +433,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.indigo.shade900, Colors.black],
+                  colors: [
+                    Colors.indigo.shade900,
+                    Colors.black,
+                  ],
                 ),
               ),
             ),
             if (_gameSetupComplete) ...[
               _buildStarField(),
+              _buildGameLanes(),
               _buildGameNotes(),
+              ..._tapEffects,
               _buildUI(),
             ],
             if (_isLoading) _buildLoadingScreen(),
@@ -401,37 +488,84 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildStarField() {
-    return CustomPaint(painter: StarFieldPainter(), size: Size.infinite);
+    return CustomPaint(
+      painter: StarFieldPainter(),
+      size: Size.infinite,
+    );
   }
-
-  Widget _buildGameNotes() {
-    return Stack(
-      children: _notes.map((note) {
-        final opacity = _calculateNoteOpacity(note);
-        if (opacity <= 0) return const SizedBox.shrink();
-
-        return Positioned(
-          left: note.starData.x,
-          top: note.starData.y,
-          child: GestureDetector(
-            onTap: () => _onNoteTap(note),
-            child: AnimatedOpacity(
-              opacity: opacity,
-              duration: const Duration(milliseconds: 100),
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _getNoteColor(note),
-                  border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _getNoteColor(note).withValues(alpha: 0.5),
-                      blurRadius: 10,
-                      spreadRadius: 2,
+  
+  Widget _buildGameLanes() {
+    return const GameLaneWidget(
+      laneCount: laneCount,
+      judgmentLinePosition: judgmentLinePosition,
+    );
+  }
+  
+  Widget _buildNoteWidget(GameNote note, int laneIndex) {
+    final keyboardPath = AssetManager.getKeyboardAssetPath('tap1');
+    debugPrint('ノート表示: keyboardPath = $keyboardPath');
+    debugPrint('アセットパス詳細: ${keyboardPath ?? "NULL"}');
+    
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _getNoteColor(note),
+        border: Border.all(
+          color: Colors.white,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _getNoteColor(note).withValues(alpha: 0.5),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: keyboardPath != null
+            ? Image.asset(
+                keyboardPath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  debugPrint('画像読み込みエラー: $error');
+                  debugPrint('スタックトレース: $stackTrace');
+                  debugPrint('試行したパス: $keyboardPath');
+                  return Container(
+                    color: Colors.red.withValues(alpha: 0.3),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error,
+                            color: Colors.red,
+                            size: 16,
+                          ),
+                          Text(
+                            'IMG\nERROR',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 8,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  );
+                },
+              )
+            : Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      _getNoteColor(note).withValues(alpha: 0.8),
+                      _getNoteColor(note).withValues(alpha: 0.4),
+                    ],
+                  ),
                 ),
                 child: Center(
                   child: Icon(
@@ -441,6 +575,50 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+      ),
+    );
+  }
+
+  Widget _buildGameNotes() {
+    if (!_isGameActive || _notes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    return Stack(
+      children: _notes.where((note) {
+        final timeUntilNote = note.starData.timing - _gameTime;
+        // 時間が来ていないノーツは表示しない
+        if (timeUntilNote > GameConstants.noteAppearTime) return false;
+        // 過ぎたノーツも非表示
+        if (timeUntilNote < -GameConstants.goodTiming * 2) return false;
+        return true;
+      }).map((note) {
+        final timeUntilNote = note.starData.timing - _gameTime;
+        final progress = (GameConstants.noteAppearTime - timeUntilNote) / GameConstants.noteAppearTime;
+        final opacity = _calculateNoteOpacity(note);
+        
+        // ノーツの位置を上から下に流す
+        final startY = screenHeight * 0.1; // 上から開始
+        final endY = screenHeight * 0.8;   // タップエリア
+        final currentY = startY + (progress * (endY - startY));
+        
+        // レーン計算（x座標0-3をレーンインデックスとして使用）
+        final laneIndex = note.starData.x.toInt().clamp(0, laneCount - 1);
+        final laneWidth = screenWidth / laneCount;
+        final noteX = laneIndex * laneWidth + laneWidth / 2 - 30; // ノートサイズの半分
+        
+        return Positioned(
+          left: noteX,
+          top: currentY,
+          child: GestureDetector(
+            onTap: () => _onNoteTap(note),
+            child: AnimatedOpacity(
+              opacity: opacity,
+              duration: const Duration(milliseconds: 100),
+              child: _buildNoteWidget(note, laneIndex),
             ),
           ),
         );
@@ -450,11 +628,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   double _calculateNoteOpacity(GameNote note) {
     if (note.isPressed) return 0.3;
-
+    
     final timeUntilNote = note.starData.timing - _gameTime;
+    
+    // まだ時間ではない
     if (timeUntilNote > GameConstants.noteAppearTime) return 0.0;
-    if (timeUntilNote < -GameConstants.goodTiming) return 0.0;
-
+    
+    // 過ぎたノーツ
+    if (timeUntilNote < -GameConstants.goodTiming * 2) return 0.0;
+    
+    // フェードイン効果
+    if (timeUntilNote > GameConstants.noteAppearTime * 0.8) {
+      final fadeProgress = (GameConstants.noteAppearTime - timeUntilNote) / (GameConstants.noteAppearTime * 0.2);
+      return fadeProgress.clamp(0.0, 1.0);
+    }
+    
     return 1.0;
   }
 
@@ -541,6 +729,27 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
+  void _addTapEffect(double x, double y, Color color) {
+    // ユニークキーを生成してエフェクトを識別
+    final effectKey = UniqueKey();
+    
+    final effectWidget = TapEffectWidget(
+      key: effectKey,
+      laneX: x,
+      laneY: y,
+      effectColor: color,
+      onComplete: () {
+        setState(() {
+          _tapEffects.removeWhere((widget) => widget.key == effectKey);
+        });
+      },
+    );
+    
+    setState(() {
+      _tapEffects.add(effectWidget);
+    });
+  }
+
   @override
   void dispose() {
     _gameController.dispose();
@@ -562,7 +771,7 @@ class StarFieldPainter extends CustomPainter {
       final x = random.nextDouble() * size.width;
       final y = random.nextDouble() * size.height;
       final radius = random.nextDouble() * 2 + 0.5;
-
+      
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
   }
