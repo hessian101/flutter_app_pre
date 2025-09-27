@@ -7,77 +7,65 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(AppColors.backgroundColor),
+      backgroundColor: Colors.transparent,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(AppColors.backgroundColor),
-              Color(AppColors.surfaceColor),
-            ],
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/image/home.png'),
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Star Music Game',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Color(AppColors.textColor),
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.3),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Star Music Game',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Color(AppColors.textColor),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  '星座から音楽を生成するリズムゲーム',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.lightBlue.withValues(alpha: 0.8),
+                  const SizedBox(height: 16),
+                  Text(
+                    '星座から音楽を生成するリズムゲーム',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.lightBlue.withValues(alpha: 0.8),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 100),
-                _buildMenuButton(
-                  context,
-                  'ゲーム開始',
-                  Icons.play_arrow,
-                  () => Navigator.pushNamed(context, Routes.game),
-                ),
-                const SizedBox(height: 20),
-                _buildMenuButton(
-                  context,
-                  'ハイスコア',
-                  Icons.leaderboard,
-                  () => Navigator.pushNamed(context, Routes.highScore),
-                ),
-                const SizedBox(height: 20),
-                _buildMenuButton(
-                  context,
-                  '演奏記録',
-                  Icons.music_note,
-                  () => Navigator.pushNamed(context, Routes.performanceList),
-                ),
-                const SizedBox(height: 20),
-                _buildMenuButton(
-                  context,
-                  '遊び方',
-                  Icons.help_outline,
-                  () => Navigator.pushNamed(context, Routes.howToPlay),
-                ),
-                const SizedBox(height: 20),
-                _buildMenuButton(
-                  context,
-                  '設定',
-                  Icons.settings,
-                  () => Navigator.pushNamed(context, Routes.settings),
-                ),
-              ],
+                  const SizedBox(height: 60),
+                  _buildMenuButton(
+                    context,
+                    'ゲーム開始',
+                    Icons.play_arrow,
+                    () => Navigator.pushNamed(context, Routes.game),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildMenuButton(
+                    context,
+                    'ハイスコア',
+                    Icons.leaderboard,
+                    () => Navigator.pushNamed(context, Routes.highScore),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildMenuButton(
+                    context,
+                    '演奏記録',
+                    Icons.music_note,
+                    () => Navigator.pushNamed(context, Routes.performanceList),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -156,7 +144,7 @@ class HomeScreen extends StatelessWidget {
     IconData icon,
     VoidCallback onPressed,
   ) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
       height: 60,
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -185,18 +173,20 @@ class HomeScreen extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          elevation: 4,
+          elevation: 0,
+          shadowColor: Colors.transparent,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 24),
+            Icon(icon, size: 24, color: Colors.white),
             const SizedBox(width: 12),
             Text(
               text,
               style: const TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
               ),
             ),
           ],
