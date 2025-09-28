@@ -22,11 +22,12 @@ class DatabaseService {
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, 'star_music_game.db');
-    
+
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -47,9 +48,40 @@ class DatabaseService {
         date TEXT NOT NULL,
         file_path TEXT NOT NULL,
         score INTEGER NOT NULL,
-        accuracy REAL NOT NULL
+        accuracy REAL NOT NULL,
+        max_combo INTEGER NOT NULL DEFAULT 0,
+        perfect_count INTEGER NOT NULL DEFAULT 0,
+        good_count INTEGER NOT NULL DEFAULT 0,
+        miss_count INTEGER NOT NULL DEFAULT 0,
+        generated_music_path TEXT,
+        original_image_path TEXT,
+        star_data_json TEXT
       )
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE SavedSong ADD COLUMN max_combo INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE SavedSong ADD COLUMN perfect_count INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE SavedSong ADD COLUMN good_count INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE SavedSong ADD COLUMN miss_count INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE SavedSong ADD COLUMN generated_music_path TEXT',
+      );
+      await db.execute(
+        'ALTER TABLE SavedSong ADD COLUMN original_image_path TEXT',
+      );
+      await db.execute('ALTER TABLE SavedSong ADD COLUMN star_data_json TEXT');
+    }
   }
 
   Future<int> insertHighScore(HighScore highScore) async {
@@ -85,11 +117,7 @@ class DatabaseService {
 
   Future<int> deleteHighScore(int id) async {
     final db = await database;
-    return await db.delete(
-      'HighScore',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('HighScore', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> insertSavedSong(SavedSong savedSong) async {
@@ -111,11 +139,7 @@ class DatabaseService {
 
   Future<int> deleteSavedSong(int id) async {
     final db = await database;
-    return await db.delete(
-      'SavedSong',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('SavedSong', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> close() async {

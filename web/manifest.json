@@ -1,6 +1,6 @@
 {
-    "name": "Star Music Game",
-    "short_name": "Star Music",
+    "name": "Meteor Notes",
+    "short_name": "Meteor Notes",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#121212",

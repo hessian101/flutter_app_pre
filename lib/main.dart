@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'screens/startup.dart';
 import 'screens/home_screen.dart';
 import 'screens/game_screen.dart';
 import 'screens/result_screen.dart';
@@ -16,20 +17,17 @@ import 'models/star_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   final audioService = AudioService();
   await audioService.initialize();
-  
+
   runApp(StarMusicGameApp(audioService: audioService));
 }
 
 class StarMusicGameApp extends StatelessWidget {
   final AudioService audioService;
 
-  const StarMusicGameApp({
-    super.key,
-    required this.audioService,
-  });
+  const StarMusicGameApp({super.key, required this.audioService});
 
   @override
   Widget build(BuildContext context) {
@@ -39,28 +37,24 @@ class StarMusicGameApp extends StatelessWidget {
           create: (_) => DatabaseService(),
           dispose: (_, db) => db.close(),
         ),
-        Provider<AudioService>.value(
-          value: audioService,
-        ),
+        Provider<AudioService>.value(value: audioService),
       ],
       child: MaterialApp(
-        title: 'Star Music Game',
+        title: 'Meteor Notes',
         theme: ThemeData(
-          primarySwatch: MaterialColor(
-            AppColors.primaryColor,
-            const <int, Color>{
-              50: Color(0xFFE3F2FD),
-              100: Color(0xFFBBDEFB),
-              200: Color(0xFF90CAF9),
-              300: Color(0xFF64B5F6),
-              400: Color(0xFF42A5F5),
-              500: Color(AppColors.primaryColor),
-              600: Color(0xFF1E88E5),
-              700: Color(0xFF1976D2),
-              800: Color(0xFF1565C0),
-              900: Color(0xFF0D47A1),
-            },
-          ),
+          primarySwatch:
+              MaterialColor(AppColors.primaryColor, const <int, Color>{
+                50: Color(0xFFE3F2FD),
+                100: Color(0xFFBBDEFB),
+                200: Color(0xFF90CAF9),
+                300: Color(0xFF64B5F6),
+                400: Color(0xFF42A5F5),
+                500: Color(AppColors.primaryColor),
+                600: Color(0xFF1E88E5),
+                700: Color(0xFF1976D2),
+                800: Color(0xFF1565C0),
+                900: Color(0xFF0D47A1),
+              }),
           scaffoldBackgroundColor: Color(AppColors.backgroundColor),
           appBarTheme: AppBarTheme(
             backgroundColor: Color(AppColors.surfaceColor),
@@ -97,7 +91,7 @@ class StarMusicGameApp extends StatelessWidget {
           ),
           useMaterial3: true,
         ),
-        initialRoute: Routes.home,
+        initialRoute: Routes.startup,
         onGenerateRoute: _onGenerateRoute,
         debugShowCheckedModeBanner: false,
       ),
@@ -106,6 +100,11 @@ class StarMusicGameApp extends StatelessWidget {
 
   Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case Routes.startup:
+        return MaterialPageRoute(
+          builder: (_) => const StartupScreen(),
+          settings: settings,
+        );
       case Routes.home:
         return MaterialPageRoute(
           builder: (_) => const HomeScreen(),
@@ -119,9 +118,7 @@ class StarMusicGameApp extends StatelessWidget {
       case Routes.result:
         final result = settings.arguments as GameResult?;
         if (result == null) {
-          return MaterialPageRoute(
-            builder: (_) => const HomeScreen(),
-          );
+          return MaterialPageRoute(builder: (_) => const HomeScreen());
         }
         return MaterialPageRoute(
           builder: (_) => ResultScreen(result: result),
@@ -153,9 +150,7 @@ class StarMusicGameApp extends StatelessWidget {
           settings: settings,
         );
       default:
-        return MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
-        );
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
     }
   }
 }

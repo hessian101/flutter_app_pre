@@ -36,13 +36,9 @@ class _GameNoteWidgetState extends State<GameNoteWidget>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 2.0, end: 1.5).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
   }
 
   @override
@@ -76,7 +72,7 @@ class _GameNoteWidgetState extends State<GameNoteWidget>
 
   Color _getNoteColor() {
     final soundId = widget.soundId ?? 'button1';
-    
+
     // soundIdに基づいて色を決定
     switch (soundId) {
       case 'button1':
@@ -120,14 +116,8 @@ class _GameNoteWidgetState extends State<GameNoteWidget>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
           child: ColorFiltered(
-            colorFilter: ColorFilter.mode(
-              _getNoteColor(),
-              BlendMode.modulate,
-            ),
-            child: Image.asset(
-              keyboardPath,
-              fit: BoxFit.cover,
-            ),
+            colorFilter: ColorFilter.mode(_getNoteColor(), BlendMode.modulate),
+            child: Image.asset(keyboardPath, fit: BoxFit.cover),
           ),
         ),
       );
@@ -139,10 +129,7 @@ class _GameNoteWidgetState extends State<GameNoteWidget>
       height: 60,
       decoration: BoxDecoration(
         gradient: RadialGradient(
-          colors: [
-            _getNoteColor(),
-            _getNoteColor().withValues(alpha: 0.7),
-          ],
+          colors: [_getNoteColor(), _getNoteColor().withValues(alpha: 0.7)],
         ),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
@@ -158,11 +145,7 @@ class _GameNoteWidgetState extends State<GameNoteWidget>
         ],
       ),
       child: Center(
-        child: Icon(
-          Icons.music_note,
-          color: Colors.white,
-          size: 24,
-        ),
+        child: Icon(Icons.music_note, color: Colors.white, size: 24),
       ),
     );
   }
@@ -187,7 +170,7 @@ class _GameNoteWidgetState extends State<GameNoteWidget>
                   children: [
                     // メインのノート
                     _buildNoteImage(),
-                    
+
                     // タップエフェクト
                     if (_isTapped)
                       Container(
@@ -201,14 +184,14 @@ class _GameNoteWidgetState extends State<GameNoteWidget>
                           ),
                         ),
                       ),
-                    
+
                     // パーフェクト判定エリアの表示（デバッグ用）
                     if (kDebugMode && widget.position > 0.8)
                       Container(
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(50),
+                          borderRadius: BorderRadius.circular(100),
                           border: Border.all(
                             color: Colors.green.withValues(alpha: 0.5),
                             width: 2,
@@ -227,17 +210,13 @@ class _GameNoteWidgetState extends State<GameNoteWidget>
 }
 
 // ノートの判定結果を表す列挙型
-enum NoteJudgment {
-  perfect,
-  good,
-  miss,
-}
+enum NoteJudgment { perfect, good, miss }
 
 // ノート判定の設定
 class NoteJudgmentConfig {
   static const double perfectThreshold = 0.05; // ±50ms
-  static const double goodThreshold = 0.15;    // ±150ms
-  
+  static const double goodThreshold = 0.15; // ±150ms
+
   static NoteJudgment getJudgment(double timingDifference) {
     final absDiff = timingDifference.abs();
     if (absDiff <= perfectThreshold) {
@@ -248,7 +227,7 @@ class NoteJudgmentConfig {
       return NoteJudgment.miss;
     }
   }
-  
+
   static int getScore(NoteJudgment judgment) {
     switch (judgment) {
       case NoteJudgment.perfect:
@@ -259,7 +238,7 @@ class NoteJudgmentConfig {
         return 0;
     }
   }
-  
+
   static String getJudgmentText(NoteJudgment judgment) {
     switch (judgment) {
       case NoteJudgment.perfect:
@@ -270,7 +249,7 @@ class NoteJudgmentConfig {
         return 'MISS';
     }
   }
-  
+
   static Color getJudgmentColor(NoteJudgment judgment) {
     switch (judgment) {
       case NoteJudgment.perfect:

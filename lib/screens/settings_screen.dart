@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,6 +32,55 @@ class SettingsScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // ゲーム設定カード
+            Card(
+              color: Color(AppColors.surfaceColor),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Icon(
+                      Icons.speed,
+                      color: Color(AppColors.primaryColor),
+                    ),
+                    title: Text(
+                      'ノート落下速度',
+                      style: TextStyle(color: Color(AppColors.textColor)),
+                    ),
+                    subtitle: Text(
+                      '現在: ${GameSettings.getSpeedLevel()}',
+                      style: TextStyle(
+                        color: Color(AppColors.secondaryTextColor),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        _buildSpeedButton(
+                          'ゆっくり',
+                          GameConstants.noteAppearTimeSlow,
+                        ),
+                        _buildSpeedButton(
+                          '普通',
+                          GameConstants.noteAppearTimeNormal,
+                        ),
+                        _buildSpeedButton(
+                          '速い',
+                          GameConstants.noteAppearTimeFast,
+                        ),
+                        _buildSpeedButton(
+                          'とても速い',
+                          GameConstants.noteAppearTimeVeryFast,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             Card(
               color: Color(AppColors.surfaceColor),
               child: Column(
@@ -42,7 +96,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     subtitle: Text(
                       '音量とオーディオ品質',
-                      style: TextStyle(color: Color(AppColors.secondaryTextColor)),
+                      style: TextStyle(
+                        color: Color(AppColors.secondaryTextColor),
+                      ),
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
@@ -54,7 +110,11 @@ class SettingsScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  Divider(color: Color(AppColors.secondaryTextColor).withValues(alpha: 0.3)),
+                  Divider(
+                    color: Color(
+                      AppColors.secondaryTextColor,
+                    ).withValues(alpha: 0.3),
+                  ),
                   ListTile(
                     leading: Icon(
                       Icons.cloud_download,
@@ -66,7 +126,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     subtitle: Text(
                       'Google Driveから音源をダウンロード',
-                      style: TextStyle(color: Color(AppColors.secondaryTextColor)),
+                      style: TextStyle(
+                        color: Color(AppColors.secondaryTextColor),
+                      ),
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
@@ -76,7 +138,11 @@ class SettingsScreen extends StatelessWidget {
                       Navigator.pushNamed(context, '/sound_download');
                     },
                   ),
-                  Divider(color: Color(AppColors.secondaryTextColor).withValues(alpha: 0.3)),
+                  Divider(
+                    color: Color(
+                      AppColors.secondaryTextColor,
+                    ).withValues(alpha: 0.3),
+                  ),
                   ListTile(
                     leading: Icon(
                       Icons.speed,
@@ -88,7 +154,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     subtitle: Text(
                       'ノートの落下速度',
-                      style: TextStyle(color: Color(AppColors.secondaryTextColor)),
+                      style: TextStyle(
+                        color: Color(AppColors.secondaryTextColor),
+                      ),
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
@@ -100,7 +168,11 @@ class SettingsScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  Divider(color: Color(AppColors.secondaryTextColor).withValues(alpha: 0.3)),
+                  Divider(
+                    color: Color(
+                      AppColors.secondaryTextColor,
+                    ).withValues(alpha: 0.3),
+                  ),
                   ListTile(
                     leading: Icon(
                       Icons.accessibility,
@@ -112,7 +184,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     subtitle: Text(
                       '視覚・聴覚サポート',
-                      style: TextStyle(color: Color(AppColors.secondaryTextColor)),
+                      style: TextStyle(
+                        color: Color(AppColors.secondaryTextColor),
+                      ),
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
@@ -143,7 +217,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     subtitle: Text(
                       'ゲームデータとファイル',
-                      style: TextStyle(color: Color(AppColors.secondaryTextColor)),
+                      style: TextStyle(
+                        color: Color(AppColors.secondaryTextColor),
+                      ),
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
@@ -155,7 +231,11 @@ class SettingsScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  Divider(color: Color(AppColors.secondaryTextColor).withValues(alpha: 0.3)),
+                  Divider(
+                    color: Color(
+                      AppColors.secondaryTextColor,
+                    ).withValues(alpha: 0.3),
+                  ),
                   ListTile(
                     leading: Icon(
                       Icons.backup,
@@ -167,7 +247,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     subtitle: Text(
                       'スコアと演奏記録',
-                      style: TextStyle(color: Color(AppColors.secondaryTextColor)),
+                      style: TextStyle(
+                        color: Color(AppColors.secondaryTextColor),
+                      ),
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
@@ -198,7 +280,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     subtitle: Text(
                       'バージョン 1.0.0',
-                      style: TextStyle(color: Color(AppColors.secondaryTextColor)),
+                      style: TextStyle(
+                        color: Color(AppColors.secondaryTextColor),
+                      ),
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
@@ -219,7 +303,11 @@ class SettingsScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  Divider(color: Color(AppColors.secondaryTextColor).withValues(alpha: 0.3)),
+                  Divider(
+                    color: Color(
+                      AppColors.secondaryTextColor,
+                    ).withValues(alpha: 0.3),
+                  ),
                   ListTile(
                     leading: Icon(
                       Icons.privacy_tip_outlined,
@@ -243,6 +331,37 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpeedButton(String label, double speed) {
+    final bool isSelected = GameSettings.noteAppearTime == speed;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            setState(() {
+              GameSettings.setNoteAppearTime(speed);
+            });
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('ノート落下速度を「$label」に設定しました')));
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isSelected
+                ? Color(AppColors.primaryColor)
+                : Color(AppColors.surfaceColor),
+            foregroundColor: isSelected
+                ? Colors.white
+                : Color(AppColors.textColor),
+            side: BorderSide(color: Color(AppColors.primaryColor), width: 1),
+          ),
+          child: Text(label),
         ),
       ),
     );

@@ -16,36 +16,39 @@ class AudioService {
 
   FlutterSoundRecorder? _recorder;
   final AudioPlayer _player = AudioPlayer();
-  
+
   bool _isRecording = false;
   bool _isPlaying = false;
   String? _currentRecordingPath;
   final List<TapSound> _recordedSounds = [];
   DateTime? _recordingStartTime;
-  
+
   VoidCallback? _playbackCompleteCallback;
 
   Future<void> initialize() async {
     try {
       final session = await AudioSession.instance;
-      await session.configure(const AudioSessionConfiguration(
-        avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.defaultToSpeaker,
-        avAudioSessionMode: AVAudioSessionMode.defaultMode,
-        androidAudioAttributes: AndroidAudioAttributes(
-          contentType: AndroidAudioContentType.music,
-          flags: AndroidAudioFlags.audibilityEnforced,
-          usage: AndroidAudioUsage.game,
+      await session.configure(
+        const AudioSessionConfiguration(
+          avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+          avAudioSessionCategoryOptions:
+              AVAudioSessionCategoryOptions.defaultToSpeaker,
+          avAudioSessionMode: AVAudioSessionMode.defaultMode,
+          androidAudioAttributes: AndroidAudioAttributes(
+            contentType: AndroidAudioContentType.music,
+            flags: AndroidAudioFlags.audibilityEnforced,
+            usage: AndroidAudioUsage.game,
+          ),
+          androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+          androidWillPauseWhenDucked: true,
         ),
-        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-        androidWillPauseWhenDucked: true,
-      ));
-      
+      );
+
       _recorder = FlutterSoundRecorder();
       await _recorder!.openRecorder();
-      
+
       _initializeAssets();
-      
+
       debugPrint('AudioService初期化完了');
     } catch (e) {
       debugPrint('AudioService初期化エラー: $e');
@@ -57,7 +60,6 @@ class AudioService {
     AssetManager.validateAssets();
   }
 
-
   Future<void> startRecording() async {
     try {
       if (_isRecording || _recorder == null) return;
@@ -68,13 +70,13 @@ class AudioService {
 
       await _recorder!.startRecorder(
         toFile: _currentRecordingPath,
-        codec: Codec.aacADTS,
+        codec: Codec.pcm16WAV,
       );
 
       _isRecording = true;
       _recordedSounds.clear();
       _recordingStartTime = DateTime.now();
-      
+
       debugPrint('録音開始');
     } catch (e) {
       debugPrint('録音開始エラー: $e');
@@ -103,7 +105,7 @@ class AudioService {
       timing: timing,
       timestamp: DateTime.now(),
     );
-    
+
     _recordedSounds.add(tapSound);
     debugPrint('タップ音記録: $soundId at $timing');
   }
@@ -111,23 +113,28 @@ class AudioService {
   Future<void> playTapSound(String soundId) async {
     try {
       recordTapSound(soundId, DateTime.now().millisecondsSinceEpoch / 1000.0);
-      
+
       // 1. まずダウンロード済み音源を確認
       final downloadService = DownloadService();
       final fileName = '$soundId.wav';
-      
-      if (await downloadService.isFileDownloaded(fileName, subfolder: 'sounds')) {
+
+      if (await downloadService.isFileDownloaded(
+        fileName,
+        subfolder: 'sounds',
+      )) {
         // ダウンロード済み音源を再生
-        final localPath = await downloadService.getLocalFilePath(fileName, subfolder: 'sounds');
+        final localPath = await downloadService.getLocalFilePath(
+          fileName,
+          subfolder: 'sounds',
+        );
         await _playLocalSound(localPath);
         debugPrint('ダウンロード音源再生: $soundId');
         return;
       }
-      
+
       // 2. アセット音源を再生（AssetManagerを使用）
       await playAssetSound(soundId);
       debugPrint('アセット音源再生: $soundId');
-      
     } catch (e) {
       debugPrint('タップ音再生エラー: $e');
       // フォールバック: 周波数情報を表示
@@ -144,13 +151,13 @@ class AudioService {
         debugPrint('音源が見つかりません: $soundId');
         return;
       }
-      
+
       final player = AudioPlayer();
       await player.setAsset(assetPath);
       await player.play();
-      
+
       debugPrint('アセット音源再生: $assetPath');
-      
+
       // 再生完了後にリソースを解放
       player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
@@ -175,7 +182,7 @@ class AudioService {
       await _player.setLoopMode(LoopMode.all);
       await _player.setVolume(0.3); // BGMは小さめに設定
       await _player.play();
-      
+
       debugPrint('BGM再生開始（音量0.3）: $assetPath');
     } catch (e) {
       debugPrint('BGM再生エラー: $e');
@@ -190,13 +197,13 @@ class AudioService {
         debugPrint('効果音が見つかりません: $effectId');
         return;
       }
-      
+
       final player = AudioPlayer();
       await player.setAsset(assetPath);
       await player.play();
-      
+
       debugPrint('効果音再生: $assetPath');
-      
+
       // 再生完了後にリソースを解放
       player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
@@ -219,7 +226,7 @@ class AudioService {
       final player = AudioPlayer();
       await player.setFilePath(filePath);
       await player.play();
-      
+
       // 再生完了後にリソースを解放
       player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
@@ -242,7 +249,7 @@ class AudioService {
       'note_6': 493.88, // B4
       'note_7': 523.25, // C5
     };
-    
+
     return frequencies[soundId] ?? 440.0;
   }
 
@@ -257,18 +264,13 @@ class AudioService {
         return null;
       }
 
-      // より適切な保存場所にコピー
-      final audioDir = await AudioUtils.getAudioRecordingsDirectory();
-      final fileName = AudioUtils.generateFileName(prefix: 'game');
-      final finalPath = path.join(audioDir, fileName);
-      
-      await file.copy(finalPath);
+      // ファイルは既に適切な場所に保存されているので、そのまま使用
+      final savedPath = _currentRecordingPath!;
       await _synthesizeAudioWithTaps();
-      
-      final savedPath = finalPath;
+
       _currentRecordingPath = null;
       _recordedSounds.clear();
-      
+
       debugPrint('録音保存完了: $savedPath');
       return savedPath;
     } catch (e) {
@@ -280,7 +282,7 @@ class AudioService {
   Future<void> _synthesizeAudioWithTaps() async {
     debugPrint('音声合成処理（実装予定）');
     debugPrint('記録されたタップ音: ${_recordedSounds.length}個');
-    
+
     for (final sound in _recordedSounds) {
       debugPrint('- ${sound.soundId} at ${sound.timing}');
     }
@@ -310,7 +312,7 @@ class AudioService {
 
       await _player.setFilePath(filePath);
       _isPlaying = true;
-      
+
       _player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
           _isPlaying = false;

@@ -31,6 +31,25 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
   void _loadSavedSongs() async {
     try {
       final songs = await _databaseService.getAllSavedSongs();
+
+      // ファイルの存在確認とデバッグ情報
+      for (final song in songs) {
+        debugPrint('演奏記録: ${song.id}');
+        debugPrint('  - 録音ファイル: ${song.filePath}');
+        debugPrint('  - 生成音楽: ${song.generatedMusicPath}');
+
+        if (song.filePath.isNotEmpty) {
+          final file = File(song.filePath);
+          debugPrint('  - 録音ファイル存在: ${await file.exists()}');
+        }
+
+        if (song.generatedMusicPath != null &&
+            song.generatedMusicPath!.isNotEmpty) {
+          final genFile = File(song.generatedMusicPath!);
+          debugPrint('  - 生成音楽ファイル存在: ${await genFile.exists()}');
+        }
+      }
+
       setState(() {
         _savedSongs = songs;
         _isLoading = false;
@@ -58,20 +77,60 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
         await _audioService.stopPlayback();
       }
 
-      final file = File(song.filePath);
+      // 生成された音楽ファイルを優先的に再生
+      String filePathToPlay = song.filePath;
+      if (song.generatedMusicPath != null &&
+          song.generatedMusicPath!.isNotEmpty) {
+        final generatedFile = File(song.generatedMusicPath!);
+        if (await generatedFile.exists()) {
+          filePathToPlay = song.generatedMusicPath!;
+        } else {
+          // 生成音楽ファイルが存在しない場合は、録音ファイルを使用
+          debugPrint('生成音楽ファイルが存在しません: ${song.generatedMusicPath}');
+          debugPrint('録音ファイルを使用します: ${song.filePath}');
+        }
+      }
+
+      final file = File(filePathToPlay);
       if (!await file.exists()) {
+        debugPrint('ファイルが見つかりません: $filePathToPlay');
+        debugPrint('ファイルの親ディレクトリ: ${file.parent.path}');
+        debugPrint('ディレクトリの存在確認: ${await file.parent.exists()}');
+
+        // ディレクトリが存在しない場合は、録音ファイルのディレクトリを確認
+        if (!await file.parent.exists()) {
+          debugPrint('ディレクトリが存在しません: ${file.parent.path}');
+          debugPrint('録音ファイルのディレクトリを確認します: ${song.filePath}');
+
+          final recordingFile = File(song.filePath);
+          if (await recordingFile.parent.exists()) {
+            debugPrint('録音ファイルのディレクトリは存在します: ${recordingFile.parent.path}');
+          } else {
+            debugPrint('録音ファイルのディレクトリも存在しません: ${recordingFile.parent.path}');
+          }
+        }
+
+        // ディレクトリ内のファイル一覧を表示
+        if (await file.parent.exists()) {
+          final files = await file.parent.list().toList();
+          debugPrint(
+            'ディレクトリ内のファイル: ${files.map((f) => f.path.split('/').last).join(', ')}',
+          );
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('ファイルが見つかりません'),
-              backgroundColor: Colors.red,
+            SnackBar(
+              content: Text('録音ファイルが見つかりません。新しいゲームをプレイして録音を作成してください。'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
             ),
           );
         }
         return;
       }
 
-      await _audioService.playRecording(song.filePath);
+      await _audioService.playRecording(filePathToPlay);
       setState(() {
         _isPlaying = true;
         _currentlyPlayingId = song.id.toString();
@@ -316,14 +375,29 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
                   title: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          _getFileName(song.filePath),
-                          style: TextStyle(
-                            color: Color(AppColors.textColor),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _getFileName(song.filePath),
+                              style: TextStyle(
+                                color: Color(AppColors.textColor),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (song.generatedMusicPath != null &&
+                                song.generatedMusicPath!.isNotEmpty)
+                              Text(
+                                '生成音楽: ${_getFileName(song.generatedMusicPath!)}',
+                                style: TextStyle(
+                                  color: Color(AppColors.primaryColor),
+                                  fontSize: 12,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
                         ),
                       ),
                       if (isCurrentlyPlaying)
@@ -379,6 +453,34 @@ class _PerformanceListScreenState extends State<PerformanceListScreen> {
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            'Perfect: ${song.perfectCount}',
+                            style: TextStyle(
+                              color: Color(AppColors.secondaryTextColor),
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            'Good: ${song.goodCount}',
+                            style: TextStyle(
+                              color: Color(AppColors.secondaryTextColor),
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            'Miss: ${song.missCount}',
+                            style: TextStyle(
+                              color: Color(AppColors.secondaryTextColor),
+                              fontSize: 12,
                             ),
                           ),
                         ],

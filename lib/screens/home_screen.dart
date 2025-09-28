@@ -1,8 +1,36 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
+import '../services/audio_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final AudioService _audioService = AudioService();
+
+  @override
+  void initState() {
+    super.initState();
+    _playBackgroundMusic();
+  }
+
+  @override
+  void dispose() {
+    _audioService.stopPlayback();
+    super.dispose();
+  }
+
+  void _playBackgroundMusic() async {
+    try {
+      await _audioService.playBackgroundMusic('bgm2');
+    } catch (e) {
+      debugPrint('BGM再生エラー: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +55,7 @@ class HomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Star Music Game',
+                    'Metoeor Notes',
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -36,7 +64,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '星座から音楽を生成するリズムゲーム',
+                    '星々から音楽を生成するリズムゲーム',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.lightBlue.withValues(alpha: 0.8),

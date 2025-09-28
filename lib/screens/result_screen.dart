@@ -9,10 +9,7 @@ import '../utils/constants.dart';
 class ResultScreen extends StatefulWidget {
   final GameResult result;
 
-  const ResultScreen({
-    super.key,
-    required this.result,
-  });
+  const ResultScreen({super.key, required this.result});
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -27,7 +24,7 @@ class _ResultScreenState extends State<ResultScreen>
 
   bool _isHighScore = false;
   bool _saveDialogShown = false;
-  
+
   final DatabaseService _databaseService = DatabaseService();
   final AudioService _audioService = AudioService();
 
@@ -44,27 +41,20 @@ class _ResultScreenState extends State<ResultScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutBack,
-    ));
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack),
+        );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
 
     _slideController.forward();
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -102,7 +92,7 @@ class _ResultScreenState extends State<ResultScreen>
       } else {
         _isHighScore = true;
       }
-      
+
       if (mounted) {
         setState(() {});
       }
@@ -166,10 +156,18 @@ class _ResultScreenState extends State<ResultScreen>
           filePath: filePath,
           score: widget.result.score,
           accuracy: widget.result.accuracy,
+          maxCombo: widget.result.maxCombo,
+          perfectCount: widget.result.perfectCount,
+          goodCount: widget.result.goodCount,
+          missCount: widget.result.missCount,
+          generatedMusicPath: null, // result_screenでは生成音楽パスは使用しない
+          originalImagePath: null,
+          starDataJson: null,
         );
 
-        await _databaseService.insertSavedSong(savedSong);
-        
+        final result = await _databaseService.insertSavedSong(savedSong);
+        debugPrint('演奏記録保存結果: $result');
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -178,15 +176,22 @@ class _ResultScreenState extends State<ResultScreen>
             ),
           );
         }
+      } else {
+        debugPrint('録音ファイルパスがnullです');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('録音ファイルが見つかりません'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
       }
     } catch (e) {
       debugPrint('録音保存エラー: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('保存に失敗しました'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('保存に失敗しました: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -203,54 +208,48 @@ class _ResultScreenState extends State<ResultScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(AppColors.backgroundColor),
+      backgroundColor: Colors.transparent,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(AppColors.backgroundColor),
-              Color(AppColors.surfaceColor),
-            ],
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/image/home.png'),
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                if (_isHighScore)
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.emoji_events,
-                          size: 80,
-                          color: Color(AppColors.goldColor),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'ハイスコア！',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Color(AppColors.goldColor),
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.3),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 30),
+                  if (_isHighScore)
+                    ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: Column(
+                        children: [
+                          Text(
+                            'ハイスコア！',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Color(AppColors.goldColor),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
+                  SlideTransition(
+                    position: _slideAnimation,
+                    child: _buildResultCard(),
                   ),
-                SlideTransition(
-                  position: _slideAnimation,
-                  child: _buildResultCard(),
-                ),
-                const SizedBox(height: 40),
-                _buildActionButtons(),
-              ],
+                  const SizedBox(height: 40),
+                  _buildActionButtons(),
+                ],
+              ),
             ),
           ),
         ),
@@ -265,7 +264,9 @@ class _ResultScreenState extends State<ResultScreen>
         color: Color(AppColors.surfaceColor),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isHighScore ? Color(AppColors.goldColor) : Color(AppColors.primaryColor),
+          color: _isHighScore
+              ? Color(AppColors.goldColor)
+              : Color(AppColors.primaryColor),
           width: 2,
         ),
         boxShadow: [
@@ -288,14 +289,29 @@ class _ResultScreenState extends State<ResultScreen>
           ),
           const SizedBox(height: 24),
           _buildResultRow('スコア', widget.result.score.toString()),
-          _buildResultRow('正確度', '${widget.result.accuracy.toStringAsFixed(1)}%'),
+          _buildResultRow(
+            '正確度',
+            '${widget.result.accuracy.toStringAsFixed(1)}%',
+          ),
           _buildResultRow('最大コンボ', widget.result.maxCombo.toString()),
           const SizedBox(height: 16),
           Divider(color: Color(AppColors.secondaryTextColor)),
           const SizedBox(height: 16),
-          _buildResultRow('Perfect', widget.result.perfectCount.toString(), Color(AppColors.goldColor)),
-          _buildResultRow('Good', widget.result.goodCount.toString(), Colors.green),
-          _buildResultRow('Miss', widget.result.missCount.toString(), Colors.red),
+          _buildResultRow(
+            'Perfect',
+            widget.result.perfectCount.toString(),
+            Color(AppColors.goldColor),
+          ),
+          _buildResultRow(
+            'Good',
+            widget.result.goodCount.toString(),
+            Colors.green,
+          ),
+          _buildResultRow(
+            'Miss',
+            widget.result.missCount.toString(),
+            Colors.red,
+          ),
         ],
       ),
     );
@@ -371,7 +387,8 @@ class _ResultScreenState extends State<ResultScreen>
             const SizedBox(width: 16),
             Expanded(
               child: OutlinedButton(
-                onPressed: () => Navigator.pushNamed(context, Routes.performanceList),
+                onPressed: () =>
+                    Navigator.pushNamed(context, Routes.performanceList),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Color(AppColors.textColor),
                   side: BorderSide(color: Color(AppColors.primaryColor)),
@@ -395,10 +412,7 @@ class _ResultScreenState extends State<ResultScreen>
           },
           child: Text(
             'もう一度プレイ',
-            style: TextStyle(
-              color: Color(AppColors.accentColor),
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Color(AppColors.accentColor), fontSize: 16),
           ),
         ),
       ],

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 class StarData {
   final double x;
   final double y;
@@ -12,12 +14,7 @@ class StarData {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'x': x,
-      'y': y,
-      'sound_id': soundId,
-      'timing': timing,
-    };
+    return {'x': x, 'y': y, 'sound_id': soundId, 'timing': timing};
   }
 
   factory StarData.fromMap(Map<String, dynamic> map) {
@@ -63,11 +60,7 @@ class GameNote {
   }
 }
 
-enum NoteJudgment {
-  perfect,
-  good,
-  miss,
-}
+enum NoteJudgment { perfect, good, miss }
 
 class GameResult {
   final int score;
@@ -76,6 +69,7 @@ class GameResult {
   final int perfectCount;
   final int goodCount;
   final int missCount;
+  final Uint8List? generatedMusicData;
 
   GameResult({
     required this.score,
@@ -84,6 +78,7 @@ class GameResult {
     required this.perfectCount,
     required this.goodCount,
     required this.missCount,
+    this.generatedMusicData,
   });
 
   @override

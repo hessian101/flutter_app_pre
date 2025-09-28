@@ -155,8 +155,9 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          const SizedBox(height: 60),
           Icon(
             Icons.leaderboard_outlined,
             size: 80,
@@ -195,6 +196,7 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
   Widget _buildScoreList() {
     return Column(
       children: [
+        const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -252,12 +254,15 @@ class _HighScoreScreenState extends State<HighScoreScreen> {
                         ),
                   title: Row(
                     children: [
-                      Text(
-                        '${score.score}',
-                        style: TextStyle(
-                          color: Color(AppColors.textColor),
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          '${score.score}',
+                          style: TextStyle(
+                            color: Color(AppColors.textColor),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 12),

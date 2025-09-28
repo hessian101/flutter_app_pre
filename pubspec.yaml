@@ -1,5 +1,5 @@
-name: flutter_sample
-description: "A new Flutter project."
+name: meteor_notes
+description: "星座画像から音楽を生成するリズムゲーム"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -53,6 +53,9 @@ dependencies:
   # Image picker
   image_picker: ^1.0.4
   
+  # Image processing
+  image: ^4.1.7
+  
   # State management
   provider: ^6.1.1
 
@@ -83,7 +86,10 @@ flutter:
     - assets/sounds/
     - assets/keyboards/
     - assets/image/home.png
-
+    - assets/02_箱根.png
+    - assets/SD2茜.png
+    - assets/SD2葵.png
+    - assets/home.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

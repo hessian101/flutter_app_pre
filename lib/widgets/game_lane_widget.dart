@@ -28,13 +28,13 @@ class GameLaneWidget extends StatelessWidget {
             child: Container(
               width: index == 0 || index == laneCount ? 3 : 1,
               height: screenHeight,
-              color: index == 0 || index == laneCount 
+              color: index == 0 || index == laneCount
                   ? Color(AppColors.primaryColor).withValues(alpha: 0.6)
                   : Color(AppColors.secondaryTextColor).withValues(alpha: 0.3),
             ),
           );
         }),
-        
+
         // 判定ライン
         Positioned(
           left: 0,
@@ -54,14 +54,14 @@ class GameLaneWidget extends StatelessWidget {
             ),
           ),
         ),
-        
-        // 判定エリア（薄い背景）
-        ...List.generate(laneCount, (laneIndex) {
+
+        // 判定エリア（4つの個別コンテナ）
+        ...List.generate(laneCount, (index) {
           return Positioned(
-            left: laneIndex * laneWidth + 2,
+            left: index * laneWidth,
             top: screenHeight * judgmentLinePosition - 40,
             child: Container(
-              width: laneWidth - 4,
+              width: laneWidth,
               height: 80,
               decoration: BoxDecoration(
                 color: Color(AppColors.primaryColor).withValues(alpha: 0.1),
@@ -74,34 +74,6 @@ class GameLaneWidget extends StatelessWidget {
             ),
           );
         }),
-        
-        // レーン番号表示（デバッグ用）
-        if (kDebugMode) ...[
-          ...List.generate(laneCount, (laneIndex) {
-            return Positioned(
-              left: laneIndex * laneWidth + laneWidth / 2 - 10,
-              top: screenHeight * judgmentLinePosition + 20,
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Color(AppColors.surfaceColor).withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    '${laneIndex + 1}',
-                    style: TextStyle(
-                      color: Color(AppColors.textColor),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
       ],
     );
   }
@@ -143,26 +115,17 @@ class _TapEffectWidgetState extends State<TapEffectWidget>
     _scaleAnimation = Tween<double>(
       begin: 0.5,
       end: 2.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _opacityAnimation = Tween<double>(
       begin: 1.0,
       end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _glowAnimation = Tween<double>(
       begin: 0.0,
       end: 30.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward().then((_) {
       widget.onComplete?.call();
@@ -193,10 +156,7 @@ class _TapEffectWidgetState extends State<TapEffectWidget>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: widget.effectColor.withValues(alpha: 0.3),
-                  border: Border.all(
-                    color: widget.effectColor,
-                    width: 3,
-                  ),
+                  border: Border.all(color: widget.effectColor, width: 3),
                   boxShadow: [
                     BoxShadow(
                       color: widget.effectColor.withValues(alpha: 0.6),
@@ -206,11 +166,7 @@ class _TapEffectWidgetState extends State<TapEffectWidget>
                   ],
                 ),
                 child: Center(
-                  child: Icon(
-                    Icons.star,
-                    color: widget.effectColor,
-                    size: 30,
-                  ),
+                  child: Icon(Icons.star, color: widget.effectColor, size: 30),
                 ),
               ),
             ),

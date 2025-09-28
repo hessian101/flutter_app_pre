@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     
     <application
-        android:label="Star Music Game"
+        android:label="Meteor Notes"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
